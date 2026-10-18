@@ -1,0 +1,81 @@
+<mujoco model="double_inverted_pendulum">
+    <compiler angle="radian" autolimits="true"/>
+    <option timestep="0.002" integrator="RK4" gravity="0 0 -9.81"/>
+
+    <!-- 三个自由度：小车水平滑动 + 两根摆杆绕 y 轴转动。
+         qpos=0 表示两根摆杆均竖直向上。 -->
+    <visual>
+        <headlight diffuse="0.8 0.8 0.8" ambient="0.3 0.3 0.3"/>
+        <global offwidth="1280" offheight="720"/>
+    </visual>
+
+    <asset>
+        <texture name="floor_grid" type="2d" builtin="checker"
+                 rgb1="0.15 0.18 0.22" rgb2="0.23 0.27 0.31"
+                 width="512" height="512"/>
+        <material name="floor_mat" texture="floor_grid" texrepeat="12 12" reflectance="0.1"/>
+        <material name="steel" rgba="0.55 0.61 0.69 1" specular="0.7" shininess="0.5"/>
+        <material name="blue" rgba="0.08 0.32 0.70 1" specular="0.5"/>
+        <material name="red" rgba="0.85 0.20 0.10 1" specular="0.4"/>
+        <material name="gold" rgba="0.95 0.65 0.08 1" specular="0.5"/>
+        <material name="rubber" rgba="0.05 0.06 0.07 1"/>
+    </asset>
+
+    <default>
+        <joint damping="0.02" armature="0.001"/>
+        <geom condim="3" friction="0.8 0.1 0.1"/>
+        <default class="decoration">
+            <geom mass="0" contype="0" conaffinity="0"/>
+        </default>
+    </default>
+
+    <worldbody>
+        <light pos="0 -4 7" dir="0 0 -1" directional="true"/>
+        <camera name="overview" pos="0 -10 3.2" xyaxes="1 0 0 0 0 1"/>
+        <geom name="floor" type="plane" size="10 10 0.1" pos="0 0 0" material="floor_mat"/>
+
+        <!-- 轨道、支架和限位块。 -->
+        <geom name="rail_front" class="decoration" type="box" size="4.3 0.04 0.04" pos="0 -0.24 1.70" material="steel"/>
+        <geom name="rail_back" class="decoration" type="box" size="4.3 0.04 0.04" pos="0 0.24 1.70" material="steel"/>
+        <geom name="support_left_front" class="decoration" type="box" size="0.07 0.07 0.85" pos="-4.25 -0.24 0.85" material="steel"/>
+        <geom name="support_left_back" class="decoration" type="box" size="0.07 0.07 0.85" pos="-4.25 0.24 0.85" material="steel"/>
+        <geom name="support_right_front" class="decoration" type="box" size="0.07 0.07 0.85" pos="4.25 -0.24 0.85" material="steel"/>
+        <geom name="support_right_back" class="decoration" type="box" size="0.07 0.07 0.85" pos="4.25 0.24 0.85" material="steel"/>
+        <geom name="stop_left" class="decoration" type="box" size="0.05 0.36 0.14" pos="-4.28 0 1.82" rgba="0.92 0.35 0.10 1"/>
+        <geom name="stop_right" class="decoration" type="box" size="0.05 0.36 0.14" pos="4.28 0 1.82" rgba="0.92 0.35 0.10 1"/>
+        <geom name="origin_mark" class="decoration" type="box" size="0.025 0.05 0.045" pos="0 -0.24 1.71" rgba="0.15 0.95 0.45 1"/>
+
+        <body name="cart" pos="0 0 1.90">
+            <inertial pos="0 0 -0.007" mass="1.10" diaginertia="0.024 0.037 0.050"/>
+            <joint name="cart_slide" type="slide" axis="1 0 0" range="-4 4" damping="0.15"/>
+            <geom name="cart_body" type="box" size="0.28 0.20 0.12" mass="1.0" material="blue"/>
+            <geom name="cart_top" class="decoration" type="box" size="0.26 0.18 0.015" pos="0 0 0.12" material="steel"/>
+            <geom name="cart_panel" class="decoration" type="box" size="0.12 0.006 0.045" pos="0 -0.203 0" rgba="0.04 0.08 0.12 1"/>
+            <geom name="status_light" class="decoration" type="sphere" size="0.018" pos="-0.08 -0.216 0" rgba="0.15 0.95 0.45 1"/>
+            <geom name="cart_wheel_left" type="cylinder" size="0.08 0.04" pos="-0.17 0.22 -0.08" euler="1.5708 0 0" mass="0" contype="0" conaffinity="0" material="rubber"/>
+            <geom name="cart_wheel_right" type="cylinder" size="0.08 0.04" pos="-0.17 -0.22 -0.08" euler="1.5708 0 0" mass="0" contype="0" conaffinity="0" material="rubber"/>
+            <geom name="wheel_front_right" class="decoration" type="cylinder" size="0.08 0.04" pos="0.17 -0.22 -0.08" euler="1.5708 0 0" material="rubber"/>
+            <geom name="wheel_back_right" class="decoration" type="cylinder" size="0.08 0.04" pos="0.17 0.22 -0.08" euler="1.5708 0 0" material="rubber"/>
+            <geom name="pivot_housing" class="decoration" type="cylinder" size="0.07 0.23" pos="0 0 0.12" euler="1.5708 0 0" material="steel"/>
+
+            <!-- 第一根摆杆，长度 1.20 m。 -->
+            <body name="pole_1" pos="0 0 0.12">
+                <joint name="pole_1_hinge" type="hinge" axis="0 1 0" damping="0.01" limited="false"/>
+                <geom name="pole_1_rod" type="capsule" fromto="0 0 0 0 0 1.20" size="0.045" mass="0.30" material="red"/>
+                <geom name="pole_1_band" class="decoration" type="cylinder" size="0.046 0.018" pos="0 0 0.62" material="steel"/>
+
+                <!-- 第二根摆杆挂在第一根末端，长度 1.00 m。 -->
+                <body name="pole_2" pos="0 0 1.20">
+                    <joint name="pole_2_hinge" type="hinge" axis="0 1 0" damping="0.01" limited="false"/>
+                    <geom name="pole_2_rod" type="capsule" fromto="0 0 0 0 0 1.00" size="0.040" mass="0.20" material="gold"/>
+                    <geom name="pole_2_tip" type="sphere" size="0.065" pos="0 0 1.00" mass="0.025" material="gold"/>
+                    <geom name="pole_2_band" class="decoration" type="cylinder" size="0.041 0.018" pos="0 0 0.52" material="steel"/>
+                </body>
+            </body>
+        </body>
+    </worldbody>
+
+    <actuator>
+        <motor name="cart_force" joint="cart_slide" gear="1" ctrlrange="-20 20"/>
+    </actuator>
+</mujoco>

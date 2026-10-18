@@ -1,0 +1,7 @@
+logs/*
+results/*
+!logs/.gitkeep
+!results/.gitkeep
+build/
+*.user
+*.suo

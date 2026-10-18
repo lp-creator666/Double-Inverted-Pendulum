@@ -1,0 +1,6 @@
+# 二级倒立摆默认参数占位文件。
+# 暂不填写控制器参数，待 MuJoCo 模型和状态顺序确认后再配置。
+
+model_file: model/double_cartpole.xml
+control_period: 0.002
+controller_mode: supervisor
