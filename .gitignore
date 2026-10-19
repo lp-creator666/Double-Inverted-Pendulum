@@ -3,5 +3,8 @@ results/*
 !logs/.gitkeep
 !results/.gitkeep
 build/
+build.*/
+compile_commands.json
+.vscode/
 *.user
 *.suo
