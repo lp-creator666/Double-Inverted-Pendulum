@@ -1,37 +1,58 @@
-# Double Inverted Pendulum
+# 二级倒立摆：MuJoCo + C++ 控制工程
 
-二级小车倒立摆控制项目。
+在 MuJoCo 中完成二级小车倒立摆的局部平衡、约束平衡和大角度摆起。参考一阶倒立摆工程的学习方式：你按主计划逐项实现，我负责解释、拆解任务、检查代码与指导调参。
 
-## 控制架构
+## 从哪里开始
 
-```text
-iLQR / NMPC：大角度摆起
-        ↓
-LMPC：接近平衡时处理约束
-        ↓
-LQR：局部快速稳定和故障兜底
-        ↓
-安全滤波：输入限幅、轨道保护、异常检查
+**只按 [工程计划.md](工程计划.md) 推进。** 每次继续项目时看其中的“当前任务”，不需要写版本记录、阶段报告或开发日志。
+
+当前已实现模型加载、关节地址查询、六维状态打印和独立 C++ 可视化窗口。`main.cpp` 设置初始扰动并调用 `viewer`，窗口中进行零输入自由运动；控制器和 CSV 日志尚未实现。
+
+Windows 在项目根目录的 PowerShell 中运行：
+
+```powershell
+.\run.bat
 ```
 
-## 当前阶段
+也可直接双击项目根目录的 `run.bat`。脚本自动编译并启动窗口，使用本机 MinGW 中的 GLFW 和 `build/deps/mujoco`。初始第一关节偏转 0.02 rad；固定视角，按 Esc 或关闭窗口退出，目前不含鼠标相机操作。脚本只对当前子进程会话设置执行策略。
 
-当前只建立工程框架，暂不实现控制算法代码。
-
-## 目录说明
-
-- `model/`：MuJoCo XML 模型；
-- `include/`：后续放置 C++ 头文件；
-- `src/`：后续放置 C++ 源文件；
-- `tests/`：单元测试和控制器测试；
-- `config/`：模型参数和控制器参数；
-- `docs/`：设计文档和实验记录；
-- `scripts/`：编译、运行和数据处理脚本；
-- `logs/`：仿真日志和结果；
-- `results/`：曲线、视频和实验汇总。
-
-## 推荐实现顺序
+## 控制路线
 
 ```text
-MuJoCo 接口 → 动力学 → 线性化 → LQR → LMPC → iLQR → NMPC → 模式切换 → 安全滤波
+模型与仿真 → 数值线性化 → LQR 平衡 → LMPC 约束平衡
+                                      ↓
+                         iLQR 摆起 → 模式切换与整体调试
+                                      ↓
+                         按约束和实时性需求扩展 NMPC
 ```
+
+输入限幅和异常检查从仿真循环开始加入。LQR 只在验证过的局部区域内作为备用控制器。
+
+## 文件入口
+
+| 文件 / 目录 | 用途 |
+|---|---|
+| [工程计划.md](工程计划.md) | 唯一任务清单、当前任务和完成标准 |
+| [docs/工程说明.md](docs/工程说明.md) | 状态约定、模块职责和程序数据流 |
+| [MPC说明.md](MPC说明.md) | MPC、LMPC、iLQR、NMPC 知识讲解 |
+| [完整控制路线参考](二级倒立摆_iLQR_NMPC_LMPC_LQR完整路线.md) | 控制架构、代价、切换和终端集的扩展阅读 |
+| [Windows与Ubuntu协同开发注意事项.md](Windows与Ubuntu协同开发注意事项.md) | 跨设备环境和 Git 使用说明 |
+| `model/` | MuJoCo XML，物理参数的来源 |
+| `include/`、`src/` | C++ 接口和实现，按任务逐步增加文件 |
+| `config/` | 待接入的运行与控制参数 |
+| `scripts/` | 后续的运行、画图和辅助工具 |
+| `tests/` | 关键数值检查和控制效果验证 |
+| `logs/`、`results/` | 最近一次实验的 CSV、曲线或视频 |
+
+## CMake 构建
+
+需 C++17 编译器、GLFW、OpenGL 和 MuJoCo。当前代码未使用 Eigen，后续线性代数模块再接入。
+
+```bash
+cmake -S . -B build/native -DMUJOCO_ROOT=/你的/MuJoCo/目录
+cmake --build build/native
+```
+
+Windows MinGW 可使用 `-G "MinGW Makefiles"`，默认 MuJoCo 目录为项目内 `build/deps/mujoco`。本机也可使用 `build/deps/cmake/data/bin/cmake.exe`。Ubuntu 需另外安装 GLFW/OpenGL 开发依赖并指定本机 MuJoCo 目录；当前兼容未版本化 MuJoCo 库或 `libmujoco.so.3.4.0`。Linux 构建尚未实测。
+
+可执行程序必须从项目根目录运行，以读取 `model/double_cartpole.xml`。Windows 首选上方脚本，它会同时配置 MuJoCo 与编译器运行库搜索路径。

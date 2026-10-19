@@ -31,21 +31,21 @@
 
     <worldbody>
         <light pos="0 -4 7" dir="0 0 -1" directional="true"/>
-        <camera name="overview" pos="0 -10 3.2" xyaxes="1 0 0 0 0 1"/>
+        <camera name="overview" pos="0 -10 4.05" xyaxes="1 0 0 0 0 1"/>
         <geom name="floor" type="plane" size="10 10 0.1" pos="0 0 0" material="floor_mat"/>
 
-        <!-- 轨道、支架和限位块。 -->
-        <geom name="rail_front" class="decoration" type="box" size="4.3 0.04 0.04" pos="0 -0.24 1.70" material="steel"/>
-        <geom name="rail_back" class="decoration" type="box" size="4.3 0.04 0.04" pos="0 0.24 1.70" material="steel"/>
-        <geom name="support_left_front" class="decoration" type="box" size="0.07 0.07 0.85" pos="-4.25 -0.24 0.85" material="steel"/>
-        <geom name="support_left_back" class="decoration" type="box" size="0.07 0.07 0.85" pos="-4.25 0.24 0.85" material="steel"/>
-        <geom name="support_right_front" class="decoration" type="box" size="0.07 0.07 0.85" pos="4.25 -0.24 0.85" material="steel"/>
-        <geom name="support_right_back" class="decoration" type="box" size="0.07 0.07 0.85" pos="4.25 0.24 0.85" material="steel"/>
-        <geom name="stop_left" class="decoration" type="box" size="0.05 0.36 0.14" pos="-4.28 0 1.82" rgba="0.92 0.35 0.10 1"/>
-        <geom name="stop_right" class="decoration" type="box" size="0.05 0.36 0.14" pos="4.28 0 1.82" rgba="0.92 0.35 0.10 1"/>
-        <geom name="origin_mark" class="decoration" type="box" size="0.025 0.05 0.045" pos="0 -0.24 1.71" rgba="0.15 0.95 0.45 1"/>
+        <!-- 轨道高度由 1.70 m 提至 2.55 m（1.5 倍），小车与附件整体上移 0.85 m。 -->
+        <geom name="rail_front" class="decoration" type="box" size="4.3 0.04 0.04" pos="0 -0.24 2.55" material="steel"/>
+        <geom name="rail_back" class="decoration" type="box" size="4.3 0.04 0.04" pos="0 0.24 2.55" material="steel"/>
+        <geom name="support_left_front" class="decoration" type="box" size="0.07 0.07 1.275" pos="-4.25 -0.24 1.275" material="steel"/>
+        <geom name="support_left_back" class="decoration" type="box" size="0.07 0.07 1.275" pos="-4.25 0.24 1.275" material="steel"/>
+        <geom name="support_right_front" class="decoration" type="box" size="0.07 0.07 1.275" pos="4.25 -0.24 1.275" material="steel"/>
+        <geom name="support_right_back" class="decoration" type="box" size="0.07 0.07 1.275" pos="4.25 0.24 1.275" material="steel"/>
+        <geom name="stop_left" class="decoration" type="box" size="0.05 0.36 0.14" pos="-4.28 0 2.67" rgba="0.92 0.35 0.10 1"/>
+        <geom name="stop_right" class="decoration" type="box" size="0.05 0.36 0.14" pos="4.28 0 2.67" rgba="0.92 0.35 0.10 1"/>
+        <geom name="origin_mark" class="decoration" type="box" size="0.025 0.05 0.045" pos="0 -0.24 2.56" rgba="0.15 0.95 0.45 1"/>
 
-        <body name="cart" pos="0 0 1.90">
+        <body name="cart" pos="0 0 2.75">
             <inertial pos="0 0 -0.007" mass="1.10" diaginertia="0.024 0.037 0.050"/>
             <joint name="cart_slide" type="slide" axis="1 0 0" range="-4 4" damping="0.15"/>
             <geom name="cart_body" type="box" size="0.28 0.20 0.12" mass="1.0" material="blue"/>

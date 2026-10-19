@@ -1,6 +1,7 @@
 # 二级倒立摆默认参数占位文件。
 # 暂不填写控制器参数，待 MuJoCo 模型和状态顺序确认后再配置。
+# 当前 main.cpp 尚未读取此文件；接入配置后再填写运行参数。
 
 model_file: model/double_cartpole.xml
 control_period: 0.002
-controller_mode: supervisor
+controller_mode: open_loop
