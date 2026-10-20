@@ -16,6 +16,14 @@ Windows 在项目根目录的 PowerShell 中运行：
 
 也可直接双击项目根目录的 `run.bat`。脚本自动编译并启动窗口，使用本机 MinGW 中的 GLFW 和 `build/deps/mujoco`。初始第一关节偏转 0.02 rad；固定视角，按 Esc 或关闭窗口退出，目前不含鼠标相机操作。脚本只对当前子进程会话设置执行策略。
 
+无窗口开环实验可直接传参数：
+
+```powershell
+.\run.bat --headless --duration 2 --force 1 --q1 0.02 --output logs/force1.csv
+```
+
+`--force` 会经过 XML 的输入范围限幅；每次实验覆盖指定 CSV。
+
 ## 控制路线
 
 ```text

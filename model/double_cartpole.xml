@@ -34,7 +34,6 @@
         <camera name="overview" pos="0 -10 4.05" xyaxes="1 0 0 0 0 1"/>
         <geom name="floor" type="plane" size="10 10 0.1" pos="0 0 0" material="floor_mat"/>
 
-        <!-- 轨道高度由 1.70 m 提至 2.55 m（1.5 倍），小车与附件整体上移 0.85 m。 -->
         <geom name="rail_front" class="decoration" type="box" size="4.3 0.04 0.04" pos="0 -0.24 2.55" material="steel"/>
         <geom name="rail_back" class="decoration" type="box" size="4.3 0.04 0.04" pos="0 0.24 2.55" material="steel"/>
         <geom name="support_left_front" class="decoration" type="box" size="0.07 0.07 1.275" pos="-4.25 -0.24 1.275" material="steel"/>

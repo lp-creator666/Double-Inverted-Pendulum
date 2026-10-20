@@ -2,6 +2,31 @@
 
 #include <mujoco/mujoco.h>
 
+#include <string>
+
+#include "types.hpp"
+
+struct RunOptions {
+    double requested_force = 0.0;
+    double duration = 0.0; // <= 0 means run until the window is closed.
+    std::string log_path = "logs/run.csv";
+};
+
 // 借用 model 和 data，不负责释放；运行期间会推进 data 的仿真状态。
-// 关闭窗口后返回 0，初始化失败或仿真异常时返回 1。
-int run_viewer(const mjModel* model, mjData* data);
+// duration <= 0 时运行到窗口关闭，否则到达指定仿真时间自动退出。
+int run_viewer(
+    const mjModel* model,
+    mjData* data,
+    const int* qpos_addresses,
+    const int* qvel_addresses,
+    const RunOptions& options
+);
+
+// 无窗口运行同一套仿真、日志和安全检查。
+int run_headless(
+    const mjModel* model,
+    mjData* data,
+    const int* qpos_addresses,
+    const int* qvel_addresses,
+    const RunOptions& options
+);

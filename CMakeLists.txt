@@ -44,6 +44,10 @@ find_library(GLFW_LIBRARY NAMES glfw3 glfw HINTS "${COMPILER_ROOT}/lib" REQUIRED
 add_executable(double_pendulum
     src/main.cpp
     src/viewer.cpp
+    src/mujoco_interface.cpp
+    src/logger.cpp
+    src/dynamics.cpp
+    src/linearize.cpp
 )
 
 target_include_directories(double_pendulum PRIVATE

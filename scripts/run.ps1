@@ -1,4 +1,8 @@
 # Run from any directory; all paths below are relative to the project root.
+param(
+    [Parameter(ValueFromRemainingArguments = $true)]
+    [string[]] $ProgramArguments
+)
 $ErrorActionPreference = 'Stop'
 Push-Location (Split-Path $PSScriptRoot -Parent)
 try {
@@ -20,11 +24,11 @@ try {
         & $compiler -std=c++17 -Wall -Wextra -pedantic `
             -finput-charset=UTF-8 -fexec-charset=UTF-8 `
             -I include -I "$mujocoDirectory/include" -I "$compilerRoot/include" `
-            src/main.cpp src/viewer.cpp "$mujocoDirectory/mujoco.dll" `
+            src/main.cpp src/viewer.cpp src/mujoco_interface.cpp src/logger.cpp src/dynamics.cpp src/linearize.cpp "$mujocoDirectory/mujoco.dll" `
             -o build/double_pendulum.exe -L "$compilerRoot/lib" -lglfw3 -lopengl32 -lgdi32
         if ($LASTEXITCODE -ne 0) { throw 'Compilation failed' }
 
-        & ./build/double_pendulum.exe
+        & ./build/double_pendulum.exe @ProgramArguments
         if ($LASTEXITCODE -ne 0) { throw "Program exited with code $LASTEXITCODE" }
     } finally {
         $env:PATH = $previousPath
