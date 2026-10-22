@@ -118,5 +118,16 @@ Linearization linearize_discrete(
             (2.0 * input_epsilon);
     }
 
+    for (double value : result.A) {
+        if (!std::isfinite(value)) {
+            throw std::runtime_error("线性化矩阵 A 包含非有限值");
+        }
+    }
+    for (double value : result.B) {
+        if (!std::isfinite(value)) {
+            throw std::runtime_error("线性化矩阵 B 包含非有限值");
+        }
+    }
+
     return result;
 }

@@ -3,13 +3,15 @@
 #include <mujoco/mujoco.h>
 
 #include <string>
-
+#include <functional>
 #include "types.hpp"
 
 struct RunOptions {
     double requested_force = 0.0;
     double duration = 0.0; // <= 0 means run until the window is closed.
     std::string log_path = "logs/run.csv";
+    // Empty: constant force. Otherwise evaluate before every physical step.
+    std::function<double(const State&)> feedback;
 };
 
 // 借用 model 和 data，不负责释放；运行期间会推进 data 的仿真状态。

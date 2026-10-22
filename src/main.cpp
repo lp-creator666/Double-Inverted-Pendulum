@@ -10,6 +10,8 @@
 #include "mujoco_interface.hpp"
 #include "dynamics.hpp"
 #include "linearize.hpp"
+#include "model_diagnostics.hpp"
+#include "lqr.hpp"
 
 namespace {
 double parse_number(const std::string& text) {
@@ -25,23 +27,33 @@ double parse_number(const std::string& text) {
 int main(int argc, char** argv) {
     RunOptions options;
     bool headless = false;
+    bool use_lqr = false;
     double initial_q1 = 0.02;
     double initial_q2 = 0.0;
+    double initial_dq1 = 0.0;
+    double initial_dq2 = 0.0;
     try {
         for (int i = 1; i < argc; ++i) {
             const std::string arg = argv[i];
             if (arg == "--help") {
                 std::cout << "用法: double_pendulum [选项]\n"
                              "  --headless          无窗口运行\n"
+                             "  --lqr               LQR 局部平衡控制\n"
                              "  --force N           恒定请求力（N）\n"
                              "  --duration S        仿真时长；无窗口模式必填\n"
                              "  --q1 RAD            第一关节初始角\n"
                              "  --q2 RAD            第二关节初始相对角\n"
+                             "  --dq1 RAD_S         第一关节初始角速度\n"
+                             "  --dq2 RAD_S         第二关节初始相对角速度\n"
                              "  --output FILE       CSV 输出路径\n";
                 return 0;
             }
             if (arg == "--headless") {
                 headless = true;
+                continue;
+            }
+            if (arg == "--lqr") {
+                use_lqr = true;
                 continue;
             }
             if (i + 1 >= argc) throw std::invalid_argument("缺少参数值: " + arg);
@@ -54,11 +66,18 @@ int main(int argc, char** argv) {
                 initial_q1 = parse_number(value);
             } else if (arg == "--q2") {
                 initial_q2 = parse_number(value);
+            } else if (arg == "--dq1") {
+                initial_dq1 = parse_number(value);
+            } else if (arg == "--dq2") {
+                initial_dq2 = parse_number(value);
             } else if (arg == "--output") {
                 options.log_path = value;
             } else {
                 throw std::invalid_argument("未知参数: " + arg);
             }
+        }
+        if (use_lqr && options.requested_force != 0.0) {
+            throw std::invalid_argument("--lqr cannot be combined with a nonzero --force");
         }
         if (headless && options.duration <= 0) {
             throw std::invalid_argument("--headless 必须同时指定正的 --duration");
@@ -160,6 +179,8 @@ int main(int argc, char** argv) {
     // 设置本次实验的初始关节角。
     data->qpos[qpos_addresses[1]] = initial_q1;
     data->qpos[qpos_addresses[2]] = initial_q2;
+    data->qvel[qvel_addresses[1]] = initial_dq1;
+    data->qvel[qvel_addresses[2]] = initial_dq2;
     mj_forward(model, data);
 
     const State current_state = read_state(
@@ -223,6 +244,38 @@ int main(int argc, char** argv) {
     }
     std::cout << " ]\n";
 
+    try {
+        run_model_diagnostics(model, prediction_data, qpos_addresses,
+                              qvel_addresses, linearization);
+        const LqrConfig config;
+        const LqrResult lqr = solve_discrete_lqr(
+            linearization.A, linearization.B, config);
+        if (use_lqr) {
+            // Capture owned copies: the simulation runs after this scope ends.
+            options.feedback = [lqr, config](const State& state) {
+                return compute_lqr_force(state, lqr, config);
+            };
+        }
+        std::cout << "Control mode: " << (use_lqr ? "LQR" : "constant force") << "\n";
+
+        std::cout << "\nLQR numerical verification:\n"
+                  << "iterations: " << lqr.iterations << "\n"
+                  << "relative change: " << lqr.final_change << "\n"
+                  << "Riccati residual: " << lqr.riccati_residual << "\n"
+                  << "P symmetry error: " << lqr.symmetry_error << "\n"
+                  << "P minimum eigenvalue: " << lqr.min_p_eigenvalue << "\n"
+                  << "closed-loop spectral radius: " << lqr.closed_loop_radius << "\n"
+                  << "K in scaled coordinates: [ ";
+        for (double value : lqr.K) std::cout << value << " ";
+        std::cout << "]\n";
+
+    } catch (const std::exception& error) {
+        std::cerr << error.what() << "\n";
+        mj_deleteData(prediction_data);
+        mj_deleteData(data);
+        mj_deleteModel(model);
+        return 1;
+    }
     const int run_result = headless
         ? run_headless(model, data, qpos_addresses, qvel_addresses, options)
         : run_viewer(model, data, qpos_addresses, qvel_addresses, options);

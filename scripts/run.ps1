@@ -1,4 +1,4 @@
-# Run from any directory; all paths below are relative to the project root.
+﻿# Run from any directory; all paths below are relative to the project root.
 param(
     [Parameter(ValueFromRemainingArguments = $true)]
     [string[]] $ProgramArguments
@@ -18,13 +18,20 @@ try {
     $compiler = (Get-Command g++ -ErrorAction Stop).Source
     $compilerDirectory = Split-Path $compiler -Parent
     $compilerRoot = Split-Path $compilerDirectory -Parent
+    $eigenDirectory = $env:EIGEN3_INCLUDE_DIR
+    if (!$eigenDirectory) {
+        $eigenDirectory = Join-Path (Get-Location) 'build/deps/eigen-3.4.0'
+    }
+    if (!(Test-Path "$eigenDirectory/Eigen/SVD")) {
+        throw 'Eigen missing: set EIGEN3_INCLUDE_DIR or install build/deps/eigen-3.4.0'
+    }
     $previousPath = $env:PATH
     $env:PATH = "$mujocoDirectory;$compilerDirectory;$env:PATH"
     try {
-        & $compiler -std=c++17 -Wall -Wextra -pedantic `
+        & $compiler -std=c++17 "-Wa,-mbig-obj" -Wall -Wextra -pedantic `
             -finput-charset=UTF-8 -fexec-charset=UTF-8 `
-            -I include -I "$mujocoDirectory/include" -I "$compilerRoot/include" `
-            src/main.cpp src/viewer.cpp src/mujoco_interface.cpp src/logger.cpp src/dynamics.cpp src/linearize.cpp "$mujocoDirectory/mujoco.dll" `
+            -I "$eigenDirectory" -I include -I "$mujocoDirectory/include" -I "$compilerRoot/include" `
+            src/main.cpp src/lqr.cpp src/lmpc.cpp src/model_diagnostics.cpp src/viewer.cpp src/mujoco_interface.cpp src/logger.cpp src/dynamics.cpp src/linearize.cpp src/controllability.cpp src/scaling.cpp "$mujocoDirectory/mujoco.dll" `
             -o build/double_pendulum.exe -L "$compilerRoot/lib" -lglfw3 -lopengl32 -lgdi32
         if ($LASTEXITCODE -ne 0) { throw 'Compilation failed' }
 

@@ -46,7 +46,17 @@ bool step_and_log(const mjModel* model, mjData* data,
                   const int* qpos_addresses, const int* qvel_addresses,
                   const RunOptions& options, const SafetyLimits& limits,
                   CsvLogger& logger, std::string& stop_reason) {
-    const double requested = options.requested_force;
+    const State current_state = read_state(data, qpos_addresses, qvel_addresses);
+    if (!valid_state(model, data) || !current_state.finite()) {
+        stop_reason = "non-finite state before control";
+        return false;
+    }
+    const double requested = options.feedback
+        ? options.feedback(current_state) : options.requested_force;
+    if (!std::isfinite(requested)) {
+        stop_reason = "non-finite requested force";
+        return false;
+    }
     const double applied = std::clamp(
         requested,
         model->actuator_ctrlrange[0],
@@ -76,6 +86,13 @@ bool step_and_log(const mjModel* model, mjData* data,
 
 bool prepare_run(const mjModel* model, const mjData* data,
                  SafetyLimits& limits, std::string& error) {
+    if (model->nu != 1 || !model->actuator_ctrllimited[0] ||
+        !std::isfinite(model->actuator_ctrlrange[0]) ||
+        !std::isfinite(model->actuator_ctrlrange[1]) ||
+        model->actuator_ctrlrange[0] >= model->actuator_ctrlrange[1]) {
+        error = "Expected one actuator with a finite control range";
+        return false;
+    }
     const int cart_joint = mj_name2id(model, mjOBJ_JOINT, "cart_slide");
     if (cart_joint < 0 || !model->jnt_limited[cart_joint]) {
         error = "缺少带范围的 cart_slide 关节";
