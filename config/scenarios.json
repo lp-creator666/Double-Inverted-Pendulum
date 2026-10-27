@@ -1,0 +1,29 @@
+{
+  "scenarios": [
+    {
+      "name": "down",
+      "plan": "config/plans/sqp_swingup.csv",
+      "q1_deg": 180,
+      "q2_deg": 0
+    },
+    {
+      "name": "down_negative",
+      "plan": "config/scenarios/down_negative.csv",
+      "q1_deg": -180,
+      "q2_deg": 0
+    },
+    {
+      "name": "down_q2_20",
+      "plan": "config/scenarios/down_q2_20.csv",
+      "q1_deg": 180,
+      "q2_deg": 20
+    },
+    {
+      "name": "down_q2_90",
+      "plan": "config/scenarios/down_q2_90.csv",
+      "q1_deg": 180,
+      "q2_deg": 90
+    }
+  ]
+}
+

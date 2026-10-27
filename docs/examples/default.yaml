@@ -1,0 +1,7 @@
+# 保留的早期配置示例；最终程序不读取此 YAML，修改它不会影响运行。
+# 生效入口：命令行参数、include/*_config.hpp、OnlineSqpConfig 和 MuJoCo XML。
+# 起摆参考轨迹与已验证姿态清单位于 config/*.csv 和 config/scenarios.json。
+
+model_file: model/double_cartpole.xml
+control_period: 0.002
+controller_mode: open_loop
